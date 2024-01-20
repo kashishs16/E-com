@@ -1,48 +1,25 @@
-import { useEffect, useState } from "react";
-import { Apicall } from "./Apicall";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { useDispatch } from 'react-redux'
 import api from "components/Api";
-import Header from "./components/Header"
 import "./index.css";
-import Sliders from "components/Sliders";
-import Footer from "components/Footer";
+import Home from "components/Home";
+import MasterLayout from "./MasterLayout";
+import Product from "components/ProductInfo";
+import { setData, setFilterData } from "./redux/productRedux";
 
 function App() {
-  const [data, setData] = useState<Array<TDetails>>([{
-    id: 0,
-    price: 0,
-    image: "",
-    category: "",
-    title: "",
-    description: "",
-    rating: {
-      rate: 0,
-      count: 0,
-    }
-  }]);
-  const [catArr, setCatArr] = useState([""]);
-  const [filteredData, setFilteredData] = useState(data);
-  const [selectedCat, setSelectedCat] = useState("");
-  const [inputValue, setInputValue] = useState("");
-  const [errmsg, setErrmsg] = useState("");
-  const [searchedValue, setSearchedValue] = useState("");
-  // console.log(input);
+  const dispatch = useDispatch();
+  // const [errmsg, setErrmsg] = useState("");
+
 
   async function fetchApi() {
     try {
       const res = await api.get("/products");
-      setData(res.data);
-      setSelectedCat("all products");
-
-      const arrCat: Array<string> = ["all products"]
-      res.data.forEach((val: TDetails) => {
-        arrCat.push(val.category);
-      })
-
-      const newCat = [...new Set(arrCat)];
-      setCatArr(newCat);
-
+      dispatch(setData(res.data));   
+      dispatch(setFilterData(res.data));
     } catch (err) {
-      setErrmsg("error");
+      // setErrmsg("error");
       console.log("error");
     }
   }
@@ -51,28 +28,16 @@ function App() {
     fetchApi();
   }, [])
 
-  useEffect(() => {
-    const arrObj: TDetails[] = []
-    data.forEach((val) => {
-      if (val.category === selectedCat) {
-        arrObj.push(val);
-      } else if (selectedCat === "all products") {
-        arrObj.push(val);
-      }
-    })
-    setFilteredData(arrObj);
-  }, [selectedCat, searchedValue])
-
   return (
-    <>
-      <div className="bg-gradient-to-r from-indigo-300 to-indigo-100 ...">
-        <Header catArr={catArr} setSelectedCat={setSelectedCat} selectedCat={selectedCat} filteredData={filteredData} setFilteredData={setFilteredData} inputValue={inputValue} setInputValue={setInputValue} setErrmsg={setErrmsg} setSearchedValue={setSearchedValue} searchedValue={searchedValue} />
-        <Sliders />
-        <Apicall filteredData={filteredData} inputValue={inputValue} errmsg={errmsg} />
-        <Footer />
-      </div>
-    </>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<MasterLayout />}>
+            <Route index element={<Home />} />
+            <Route path="/products" element={<Product />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
   );
-} 
+}
 
 export default App;
